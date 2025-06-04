@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"sync"
+	"time"
 )
 
 const (
@@ -11,30 +14,85 @@ const (
 
 // generateRandomElements generates random elements.
 func generateRandomElements(size int) []int {
-	// ваш код здесь
+	if size < 1 {
+		return []int{}
+	}
+	rnd := rand.NewSource(time.Now().UnixNano())
+
+	res := make([]int, size)
+	for i := 0; i < size; i++ {
+		res[i] = int(rnd.Int63())
+	}
+	return res
 }
 
 // maximum returns the maximum number of elements.
 func maximum(data []int) int {
-	// ваш код здесь
+	if len(data) == 0 {
+		return 0
+	}
+
+	max := data[0]
+	for _, n := range data[1:] {
+		if max < n {
+			max = n
+		}
+	}
+	return max
 }
 
 // maxChunks returns the maximum number of elements in a chunks.
 func maxChunks(data []int) int {
-	// ваш код здесь
+	if len(data) < CHUNKS {
+		return maximum(data)
+	}
+
+	var wg sync.WaitGroup
+	max := make([]int, CHUNKS+1)
+
+	sizeChunk := len(data) / CHUNKS
+
+	f := func(i int) {
+		defer wg.Done()
+		m := data[i*sizeChunk]
+		for _, j := range data[i*sizeChunk+1 : (i+1)*sizeChunk] {
+			if m < j {
+				m = j
+			}
+		}
+		max[i] = m
+	}
+
+	wg.Add(CHUNKS)
+	for i := 0; i < CHUNKS; i++ {
+		go f(i)
+	}
+
+	if len(data[CHUNKS*sizeChunk:]) > 0 {
+    	max[CHUNKS] = maximum(data[CHUNKS*sizeChunk:])
+	} else {
+	    max = max[:CHUNKS]
+	}
+
+	wg.Wait()
+	return maximum(max) 	
 }
 
 func main() {
-	fmt.Printf("Генерируем %d целых чисел", SIZE)
-	// ваш код здесь
+	fmt.Printf("Генерируем %d целых чисел\n", SIZE)
+	data := generateRandomElements(SIZE)
 
 	fmt.Println("Ищем максимальное значение в один поток")
-	// ваш код здесь
+	start := time.Now()
+	max := maximum(data)
+	elapsed := time.Since(start).Milliseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 
-	fmt.Printf("Ищем максимальное значение в %d потоков", CHUNKS)
-	// ваш код здесь
+	fmt.Printf("Ищем максимальное значение в %d потоков\n", CHUNKS)
+	start = time.Now()
+	max = maxChunks(data)
+	elapsed = time.Since(start).Milliseconds()
 
 	fmt.Printf("Максимальное значение элемента: %d\nВремя поиска: %d ms\n", max, elapsed)
 }
