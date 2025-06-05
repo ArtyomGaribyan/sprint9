@@ -20,11 +20,10 @@ func TestGenerateRandomElements(t *testing.T) {
 	res := generateRandomElements(size)
 	require.Len(t, res, size)
 
-	testValues := map[int]int{
-		9:  9,
-		13: 13,
-		0:  0,
-		3:  3,
+	testValues := []int{9, 5, 0, 1}
+
+	for _, size := range testValues {
+		assert.Len(t, generateRandomElements(size), size)
 	}
 }
 
