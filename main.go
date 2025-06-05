@@ -54,13 +54,7 @@ func maxChunks(data []int) int {
 
 	f := func(i int) {
 		defer wg.Done()
-		m := data[i*sizeChunk]
-		for _, j := range data[i*sizeChunk+1 : (i+1)*sizeChunk] {
-			if m < j {
-				m = j
-			}
-		}
-		max[i] = m
+		max[i] = maximum(data[i*sizeChunk+1 : (i+1)*sizeChunk])
 	}
 
 	wg.Add(CHUNKS)
@@ -68,11 +62,7 @@ func maxChunks(data []int) int {
 		go f(i)
 	}
 
-	if len(data[CHUNKS*sizeChunk:]) > 0 {
     	max[CHUNKS] = maximum(data[CHUNKS*sizeChunk:])
-	} else {
-	    max = max[:CHUNKS]
-	}
 
 	wg.Wait()
 	return maximum(max) 	
